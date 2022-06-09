@@ -1,11 +1,7 @@
 <template>
-  <div>
-    test
-  </div>
+  <Game />
 </template>
 
 <script setup>
+import Game from './components/Game.vue';
 </script>
-
-<style lang="sass" scoped>
-</style>
