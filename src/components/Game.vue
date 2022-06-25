@@ -15,11 +15,7 @@
 
 <script setup>
 import { ref } from "vue";
-
-const SPEED = 5;
-const FPS = 60;
-const MAX_HEIGHT = 1050;
-const MAX_WIDTH = 1250;
+import { SPEED, FPS, MAX_HEIGHT, MAX_WIDTH } from "../config/config";
 
 const top = ref(0);
 const left = ref(0);
@@ -86,7 +82,7 @@ window.addEventListener("keyup", e => {
           text-align: center
           background-color: green
           border: 2px solid blue
-          
+
   .player
     position: absolute
     height: 50px
