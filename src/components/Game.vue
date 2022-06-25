@@ -19,6 +19,7 @@ import { SPEED, FPS, MAX_HEIGHT, MAX_WIDTH } from "../config/config";
 
 const top = ref(0);
 const left = ref(0);
+const UPDATE_TIME = 1 / FPS;
 
 // Order: "WASD"
 const flags = [
@@ -57,7 +58,7 @@ window.addEventListener("keyup", e => {
     if (flag) func();
   });
 
-  setTimeout(loop, 1 / FPS);
+  setTimeout(loop, UPDATE_TIME);
 })();
 
 </script>
