@@ -1,10 +1,9 @@
 <template>
   <main class="justify-center align-center">
     <section>
-
       <table>
         <tr v-for="i in ROWS">
-          <td v-for="j in COLS" :class="classes[i-1][j-1]">GRID</td>
+          <td v-for="j in COLS" :class="classes[i-1][j-1]"></td>
         </tr>
       </table>
 
@@ -33,20 +32,49 @@ const left = ref(0);
 
 // Order: "WASD"
 const flags = [
-  [false, () => move(top, -1, MAX_HEIGHT)],
-  [false, () => move(left, -1, MAX_WIDTH)],
-  [false, () => move(top, 1, MAX_HEIGHT)],
-  [false, () => move(left, 1, MAX_WIDTH)]
+  [false, () => move("top", -1)],
+  [false, () => move("left", -1)],
+  [false, () => move("top", 1)],
+  [false, () => move("left", 1)]
 ];
 
-function move(reactive, multiplicator, MAX) {
+// Get all cells the player is currently in (4 total)
+function getCells(x, y) {
+  return [
+    [
+      Math.floor(x / 100),
+      Math.ceil(x / 100)
+    ],
+
+    [
+      Math.floor(y / 100),
+      Math.ceil(y / 100)
+    ]
+  ];
+};
+
+function move(direction, multiplicator) {
+  const reactive = direction === "top" ? top : left;
+  const MAX = direction === "top" ? MAX_HEIGHT : MAX_WIDTH;
+
   const temp = reactive.value + SPEED * multiplicator;
 
   if (temp < 0) {
     return reactive.value = 0;
   } else if (temp > MAX) {
     return reactive.value = MAX;
-  }
+  };
+
+  const x = direction === "top" ? temp : top.value;
+  const y = direction === "left" ? temp : left.value;
+
+  const [cellX, cellY] = getCells(x, y);
+
+  for (const X of cellX) {
+    for (const Y of cellY) {
+      if (classes[X][Y] !== "free") return;
+    }
+  };
 
   reactive.value = temp;
 };
@@ -63,13 +91,13 @@ window.addEventListener("keyup", e => {
   flags[index][0] = false;
 });
 
-(function loop() {
+function loop() {
   flags.forEach(([flag, func]) => {
     if (flag) func();
   });
+}
 
-  setTimeout(loop, UPDATE_TIME);
-})();
+setInterval(loop, UPDATE_TIME);
 
 </script>
 
@@ -95,8 +123,8 @@ window.addEventListener("keyup", e => {
 
   .player
     position: absolute
-    height: 50px
-    width: 50px
+    height: 100px
+    width: 100px
     background-color: red
 
   .free
