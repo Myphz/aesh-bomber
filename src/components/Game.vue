@@ -21,14 +21,14 @@ import { COLS, ROWS, SPEED, FPS, MAX_HEIGHT, MAX_WIDTH, FREE_SLOTS, BOMB_TIME, F
 
 const UPDATE_TIME = 1000 / FPS;
 
-const classes = [...Array(ROWS).keys()].map(i => [
+const classes = reactive([...Array(ROWS).keys()].map(i => [
   ...[...Array(COLS).keys()].map(j => {
     if (FREE_SLOTS.includes(`${i}-${j}`)) return "free";
     if (i % 2 && j % 2) return "ice-unbreakable";
     if (Math.random() < FREE_PCT) return "ice";
     return "free";
   })
-]);
+]));
 
 const top = ref(0);
 const left = ref(0);
@@ -95,13 +95,26 @@ function placeBomb() {
   if (bombs.length === bombs_available) return;
   const [cellX, cellY] = getCell(top.value, left.value);
   bombs.push([cellX, cellY]);
-  setTimeout(animateBomb, BOMB_TIME - 1000);
-  setTimeout(clearBomb, BOMB_TIME);
+  setTimeout(animateBomb, BOMB_TIME);
+  setTimeout(clearBomb, BOMB_TIME + 1000);
 };
 
 function animateBomb() {
-  const bomb = document.getElementsByClassName("bomb")[0];
-  bomb.classList.add("bomb-explosion");
+  const [bombX, bombY] = bombs[0];
+
+  for (let bombPower = -power.value; bombPower <= power.value; bombPower++) {
+    const blockX = bombX + bombPower;
+    if (blockX < 0) continue;
+    if (classes[blockX][bombY] === "ice") classes[blockX][bombY] = "free";
+  };
+
+  for (let bombPower = -power.value; bombPower <= power.value; bombPower++) {
+    const blockY = bombY + bombPower;
+    if (blockY < 0) continue;
+    if (classes[bombX][blockY] === "ice") classes[bombX][blockY] = "free";
+  };
+
+  document.getElementsByClassName("bomb")[0].classList.add("bomb-explosion");
 };
 
 function clearBomb() {
@@ -172,7 +185,6 @@ setInterval(loop, UPDATE_TIME);
 
     &::before
       left: 0
-      animation: explosion-top 1s linear 2s forwards
       top: calc(-100px * var(--power))
       height: calc(200px * var(--power) + 50px)
       width: 50px
