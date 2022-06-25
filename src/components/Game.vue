@@ -8,13 +8,14 @@
       </table>
 
       <div class="player" :style="`top: ${top}px; left: ${left}px`"></div>
+      <div v-for="[x, y] in bombs" :key="`${x}-${y}`" class="bomb" :style="`top: ${x+25}px; left: ${y+25}px`"></div>
     </section>
   </main>
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { COLS, ROWS, SPEED, FPS, MAX_HEIGHT, MAX_WIDTH, FREE_SLOTS, FREE_PCT } from "../config/config";
+import { reactive, ref } from "vue";
+import { COLS, ROWS, SPEED, FPS, MAX_HEIGHT, MAX_WIDTH, FREE_SLOTS, BOMB_TIME, FREE_PCT } from "../config/config";
 
 const UPDATE_TIME = 1000 / FPS;
 
@@ -29,6 +30,9 @@ const classes = [...Array(ROWS).keys()].map(i => [
 
 const top = ref(0);
 const left = ref(0);
+
+let bombs_available = 1;
+const bombs = reactive([]);
 
 // Order: "WASD"
 const flags = [
@@ -52,6 +56,11 @@ function getCells(x, y) {
     ]
   ];
 };
+
+// Get the closest cell
+function getCell(x, y) {
+  return [Math.round(x / 100), Math.round(y / 100)];
+}
 
 function move(direction, multiplicator) {
   const reactive = direction === "top" ? top : left;
@@ -79,7 +88,19 @@ function move(direction, multiplicator) {
   reactive.value = temp;
 };
 
+function placeBomb() {
+  if (bombs.length === bombs_available) return;
+  const [cellX, cellY] = getCell(top.value, left.value);
+  bombs.push([cellX*100, cellY*100]);
+  setTimeout(clearBomb, BOMB_TIME);
+};
+
+function clearBomb() {
+  bombs.shift();
+};
+
 window.addEventListener("keydown", e => {
+  if (e.key === " ") return placeBomb();
   const index = "wasd".indexOf(e.key);
   if (index === -1) return;
   flags[index][0] = true;
@@ -126,6 +147,12 @@ setInterval(loop, UPDATE_TIME);
     height: 100px
     width: 100px
     background-color: red
+
+  .bomb
+    position: absolute
+    height: 50px
+    width: 50px
+    background-color: yellow
 
   .free
     background-color: white
