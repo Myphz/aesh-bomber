@@ -3,8 +3,8 @@
     <section>
 
       <table>
-        <tr v-for="i in 11">
-          <td v-for="i in 13">GRID</td>
+        <tr v-for="i in ROWS">
+          <td v-for="j in COLS" :class="classes[i-1][j-1]">GRID</td>
         </tr>
       </table>
 
@@ -15,21 +15,31 @@
 
 <script setup>
 import { ref } from "vue";
-import { SPEED, FPS, MAX_HEIGHT, MAX_WIDTH } from "../config/config";
+import { COLS, ROWS, SPEED, FPS, MAX_HEIGHT, MAX_WIDTH, FREE_SLOTS, FREE_PCT } from "../config/config";
+
+const UPDATE_TIME = 1000 / FPS;
+
+const classes = [...Array(ROWS).keys()].map(i => [
+  ...[...Array(COLS).keys()].map(j => {
+    if (FREE_SLOTS.includes(`${i}-${j}`)) return "free";
+    if (i % 2 && j % 2) return "ice-unbreakable";
+    if (Math.random() < FREE_PCT) return "ice";
+    return "free";
+  })
+]);
 
 const top = ref(0);
 const left = ref(0);
-const UPDATE_TIME = 1 / FPS;
 
 // Order: "WASD"
 const flags = [
-  [false, () => add(top, -1, MAX_HEIGHT)],
-  [false, () => add(left, -1, MAX_WIDTH)],
-  [false, () => add(top, 1, MAX_HEIGHT)],
-  [false, () => add(left, 1, MAX_WIDTH)]
+  [false, () => move(top, -1, MAX_HEIGHT)],
+  [false, () => move(left, -1, MAX_WIDTH)],
+  [false, () => move(top, 1, MAX_HEIGHT)],
+  [false, () => move(left, 1, MAX_WIDTH)]
 ];
 
-function add(reactive, multiplicator, MAX) {
+function move(reactive, multiplicator, MAX) {
   const temp = reactive.value + SPEED * multiplicator;
 
   if (temp < 0) {
@@ -81,7 +91,6 @@ window.addEventListener("keyup", e => {
 
         td
           text-align: center
-          background-color: green
           border: 2px solid blue
 
   .player
@@ -89,4 +98,13 @@ window.addEventListener("keyup", e => {
     height: 50px
     width: 50px
     background-color: red
+
+  .free
+    background-color: white
+
+  .ice
+    background-color: teal
+
+  .ice-unbreakable
+    background-color: blue
 </style>
