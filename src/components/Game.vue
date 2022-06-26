@@ -35,6 +35,8 @@ const left = ref(0);
 const power = ref(1);
 
 let bombs_available = 1;
+let dead = false;
+let toClear = [];
 const bombs = reactive([]);
 
 // Order: "WASD"
@@ -66,6 +68,7 @@ function getCell(x, y) {
 }
 
 function move(direction, multiplicator) {
+  if (dead) return;
   const reactive = direction === "top" ? top : left;
   const MAX = direction === "top" ? MAX_HEIGHT : MAX_WIDTH;
 
@@ -84,6 +87,7 @@ function move(direction, multiplicator) {
 
   for (const X of cellX) {
     for (const Y of cellY) {
+      if (classes[X][Y] === "free-dead") return dead = true;
       if (classes[X][Y] !== "free") return;
     }
   };
@@ -101,23 +105,36 @@ function placeBomb() {
 
 function animateBomb() {
   const [bombX, bombY] = bombs[0];
+  const [cellX, cellY] = getCells(top.value, left.value);
+  toClear.push([]);
+  const index = toClear.length - 1;
 
   for (let bombPower = -power.value; bombPower <= power.value; bombPower++) {
     const blockX = bombX + bombPower;
     if (blockX < 0) continue;
-    if (classes[blockX][bombY] === "ice") classes[blockX][bombY] = "free";
+    if (classes[blockX][bombY] !== "ice-unbreakable") {
+      classes[blockX][bombY] = "free-dead";
+      toClear[index].push([blockX, bombY]);
+    };
+    if (cellX.includes(blockX) && cellY.includes(bombY)) dead = true;
   };
 
   for (let bombPower = -power.value; bombPower <= power.value; bombPower++) {
     const blockY = bombY + bombPower;
     if (blockY < 0) continue;
-    if (classes[bombX][blockY] === "ice") classes[bombX][blockY] = "free";
+    if (classes[bombX][blockY] !== "ice-unbreakable") {
+      classes[bombX][blockY] = "free-dead";
+      toClear[index].push([bombX, blockY]);
+    }
+    if (cellX.includes(bombX) && cellY.includes(blockY)) dead = true;
   };
 
   document.getElementsByClassName("bomb")[0].classList.add("bomb-explosion");
 };
 
 function clearBomb() {
+  for (const [x, y] of toClear[0]) classes[x][y] = "free";
+  toClear.shift();
   bombs.shift();
 };
 
@@ -194,7 +211,7 @@ setInterval(loop, UPDATE_TIME);
       height: 50px
       width: calc(200px * var(--power) + 50px)
 
-  .free
+  .free, .free-dead
     background-color: white
 
   .ice
